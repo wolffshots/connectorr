@@ -1,0 +1,39 @@
+services:
+  #app:
+  #    image: some-app
+  #    network_mode: service:connectorr # add this to your app and move the port definitions to the connectorr
+
+  connectorr:
+    build: .
+    #image: connectorr # todo
+    #ports:
+    #  - 8080:8080 # specific port for the app you have connected
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - GATEWAY_IP=172.21.0.2 # ip of the gateway container
+      - BYPASS_IP=172.21.0.1 # ip of the docker host in the network, normally 172.x.0.1
+      - LOCAL_SUBNETS=192.168.88.0/24,100.64.0.0/10 # comma separated list of subnets
+      - INTERNET_IP=1.1.1.1  # External IP to ping for health check
+      - LOCAL_IP=192.168.88.1  # Local IP to ping for health check
+    restart: unless-stopped
+    extra_hosts:
+      - gateway:172.21.0.2 #same as GATEWAY_IP
+    healthcheck:
+      test: ping -c 1 1.1.1.1 || exit 1
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      wgnet: # the network you want to use for the gateway + apps 
+        ipv4_address: 172.21.0.50 # static ip for this container
+networks:
+  wgnet: # the network you want to use for the gateway + apps 
+    external: true # make sure to create it statically outside of this stack with something like `docker network create --subnet 172.21.0.0/24 vpn_net`
+
