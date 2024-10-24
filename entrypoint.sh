@@ -21,7 +21,7 @@ ip route
 sleep 2
 
 echo "IP through the default route:"
-echo $(curl -s ifconfig.me/ip || "Failed to fetch IP")
+echo $(busybox wget -qO- ifconfig.me/ip || "Failed to fetch IP")
 
 # Infinite loop to keep container running
 while true; do
