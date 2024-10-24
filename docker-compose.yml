@@ -2,10 +2,16 @@ services:
   #app:
   #    image: some-app
   #    network_mode: service:connectorr # add this to your app and move the port definitions to the connectorr
+  
+  ## minimal example with an alpine image
+  #alpine:
+  #   image: alpine:latest
+  #  network_mode: service:connectorr
+  #  command: sh -c "apk add curl && curl ifconfig.me/ip && ping -c 1 1.1.1.1 && ping -c 1 192.168.88.1"
 
   connectorr:
-    # build: . # use this to build from the Dockerfile and comment out image:
-    image: ghcr.io/wolffshots/connectorr:main
+    #build: . # use this to build from the Dockerfile and comment out image:
+    image: ghcr.io/wolffshots/connectorr:latest
     #ports:
     #  - 8080:8080 # specific port for the app you have connected
     cap_add:
@@ -13,9 +19,11 @@ services:
     environment:
       - GATEWAY_IP=172.21.0.2 # ip of the gateway container
       - BYPASS_IP=172.21.0.1 # ip of the docker host in the network, normally 172.x.0.1
-      - LOCAL_SUBNETS=192.168.88.0/24,100.64.0.0/10 # comma separated list of subnets
-      - INTERNET_IP=1.1.1.1  # External IP to ping for health check
-      - LOCAL_IP=192.168.88.1  # Local IP to ping for health check
+      - BYPASS_SUBNETS=192.168.88.0/24,100.64.0.0/10 # comma separated list of subnets
+      - HEALTH_REMOTE_IP=1.1.1.1  # External IP to ping for health check
+      - HEALTH_LOCAL_IP=192.168.88.1  # Local IP to ping for health check
+      - IP_API_URL=ifconfig.me/ip
+      - TRACE=on
     restart: unless-stopped
     extra_hosts:
       - gateway:172.21.0.2 #same as GATEWAY_IP
