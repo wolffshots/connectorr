@@ -1,13 +1,9 @@
 services:
-  #app:
-  #    image: some-app
-  #    network_mode: service:connectorr # add this to your app and move the port definitions to the connectorr
-  
   ## minimal example with an alpine image
-  #alpine:
+  # alpine:
   #   image: alpine:latest
-  #  network_mode: service:connectorr
-  #  command: sh -c "apk add curl traceroute && curl ifconfig.me/ip && ping -c 1 1.1.1.1 && traceroute 1.1.1.1 && traceroute 192.168.88.1"
+  #   network_mode: service:connectorr
+  #   command: sh -c "sleep 3600 &; wait $!" # just sleep for an hour
 
   connectorr:
     #build: . # use this to build from the Dockerfile and comment out image
@@ -18,15 +14,16 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - GATEWAY_IP=172.21.0.2 # ip of the gateway container
+      - GATEWAY_IP=172.21.0.2
       - BYPASS_IP=172.21.0.1 # ip of the docker host in the network, normally 172.x.0.1
-      - BYPASS_SUBNETS=192.168.88.0/24,100.64.0.0/10 # comma separated list of subnets
-      - HEALTH_REMOTE_IP=1.1.1.1 # external IP to ping for health check
-      - HEALTH_REMOTE_CHECK=on # whether to ping the HEALTH_REMOTE_IP from inside the container to log health
-      - HEALTH_LOCAL_IP=192.168.88.1 # local IP to ping for health check
-      - HEALTH_LOCAL_CHECK=on # whether to ping the HEALTH_LOCAL_IP from inside the container to log health
-      - IP_API_URL=ifconfig.me/ip # endpoint to wget from to print IP
-      - TRACE_ON_START=on # run traceroutes when starting to confirm routing table
+      - BYPASS_SUBNETS=192.168.88.0/24,100.64.0.0/10 # comma separated list of subnets that should go through bypass ip
+      - HEALTH_REMOTE_IP=1.1.1.1
+      - HEALTH_REMOTE_CHECK=on
+      - HEALTH_LOCAL_IP=192.168.88.1
+      - HEALTH_LOCAL_CHECK=on
+      # - IP_API_URL=ifconfig.me/ip
+      # - IP_API_CHECK=on
+      # - TRACE_ON_START=off
     restart: unless-stopped
     ## these extra hosts just give names to IPs in things like traceroute but are optional
     extra_hosts:
@@ -34,21 +31,15 @@ services:
       - "bypass:172.21.0.1"
       - "health_local_ip:192.168.88.1"
       - "health_remote_ip:1.1.1.1"
-    healthcheck:
-      test: ["CMD-SHELL", "ping -c 1 1.1.1.1 || exit 1"]
-      interval: 5m
-      timeout: 10s
-      retries: 3
-      start_period: 10s
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
+        max-size: "5m"
         max-file: "3"
     networks:
-      wgnet: # the network you want to use for the gateway + apps 
+      vpn_net: # the network you want to use for the gateway + apps 
         ipv4_address: 172.21.0.50 # static ip for this container
 networks:
-  wgnet: # the network you want to use for the gateway + apps 
+  vpn_net: # the network you want to use for the gateway + apps 
     external: true # make sure to create it statically outside of this stack with something like `docker network create --subnet 172.21.0.0/24 vpn_net`
 
