@@ -14,7 +14,7 @@ You'll use IPs in this subnet and this network name for the containers you want 
 
 ## Gateway container
 
-Here's a simple setup for a [gluetun](https://github.com/qmcgaw/gluetun) stack which you could have at `/opt/stacks/glutun/docker-compose.yml`. You'll just need to set up your credentials for your provider as you can see in the [gluetun-wiki](https://github.com/qmcgaw/gluetun-wiki) repo
+Here's a simple setup for a [gluetun](https://github.com/qdm12/gluetun) stack which you could have at `/opt/stacks/glutun/docker-compose.yml`. You'll just need to set up your credentials for your provider as you can see in the [gluetun-wiki](https://github.com/qdm12/gluetun-wiki) repo
 ```yml
 services:
   gluetun:
@@ -55,7 +55,7 @@ iptables -A FORWARD -d 172.21.0.0/24 -i tun0 -j ACCEPT
 iptables -t nat -A POSTROUTING -s 172.21.0.0/24 -o tun0 -j MASQUERADE
 ```
 
-Make sure the [gluetun](https://github.com/qmcgaw/gluetun) stack is up and running correctly before moving on. If you have trouble please check the [gluetun-wiki](https://github.com/qmcgaw/gluetun-wiki) repo for help
+Make sure the [gluetun](https://github.com/qdm12/gluetun) stack is up and running correctly before moving on. If you have trouble please check the [gluetun-wiki](https://github.com/qdm12/gluetun-wiki) repo for help
 
 ## Environment
 
