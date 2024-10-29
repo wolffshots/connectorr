@@ -20,14 +20,14 @@ ip route
 
 sleep 2
 
-if [ "${TRACE}" = "on" ] || [ "${TRACE}" = "true" ] || [ "${TRACE}" = "ON" ] || [ "${TRACE}" = "TRUE" ]; then
+if [ "${TRACE_ON_START}" = "on" ] || [ "${TRACE_ON_START}" = "true" ] || [ "${TRACE_ON_START}" = "ON" ] || [ "${TRACE_ON_START}" = "TRUE" ]; then
     echo "Running traceroute..."
     traceroute "$HEALTH_REMOTE_IP"
     traceroute "$HEALTH_LOCAL_IP"
 fi
 
 echo "IP through the default route:"
-echo $(busybox wget -qO- $IP_API_URL || "Failed to fetch IP")
+echo $(wget -qO- $IP_API_URL || "Failed to fetch IP")
 
 check_health() {
     local ip="$1"
@@ -37,9 +37,9 @@ check_health() {
 }
 
 # Total duration between health checks in seconds
-TOTAL_SLEEP=30
+TOTAL_SLEEP=120
 # Shorter sleep duration in seconds
-SHORT_SLEEP=1
+SHORT_SLEEP=12
 
 # Function to handle cleanup on SIGTERM
 cleanup() {
@@ -52,10 +52,6 @@ trap cleanup SIGTERM SIGINT
 
 # Infinite loop to keep container running
 while true; do
-    # Health check pings
-    check_health "$HEALTH_REMOTE_IP"
-    check_health "$HEALTH_LOCAL_IP"
-
     # Initialize elapsed time
     elapsed=0
 
@@ -63,5 +59,13 @@ while true; do
     while [ "$elapsed" -lt "$TOTAL_SLEEP" ]; do
         sleep "$SHORT_SLEEP"
         elapsed=$((elapsed + SHORT_SLEEP))
+        # Local health check ping
+        if [ "${HEALTH_LOCAL_CHECK}" = "on" ] || [ "${HEALTH_LOCAL_CHECK}" = "true" ] || [ "${HEALTH_LOCAL_CHECK}" = "ON" ] || [ "${HEALTH_LOCAL_CHECK}" = "TRUE" ]; then
+            check_health "$HEALTH_LOCAL_IP"
+        fi
     done
+    # Remote health check ping
+    if [ "${HEALTH_REMOTE_CHECK}" = "on" ] || [ "${HEALTH_REMOTE_CHECK}" = "true" ] || [ "${HEALTH_REMOTE_CHECK}" = "ON" ] || [ "${HEALTH_REMOTE_CHECK}" = "TRUE" ]; then
+        check_health "$HEALTH_REMOTE_IP"
+    fi
 done
