@@ -39,7 +39,7 @@ check_health() {
 # Total duration between health checks in seconds
 TOTAL_SLEEP=120
 # Shorter sleep duration in seconds
-SHORT_SLEEP=12
+QUARTER_SHORT_SLEEP=3
 
 # Function to handle cleanup on SIGTERM
 cleanup() {
@@ -57,7 +57,9 @@ while true; do
 
     # Sleep in shorter intervals until total sleep is reached
     while [ "$elapsed" -lt "$TOTAL_SLEEP" ]; do
-        sleep "$SHORT_SLEEP"
+        for i in 1 2 3 4; do
+            sleep "$QUARTER_SHORT_SLEEP"
+        done
         elapsed=$((elapsed + SHORT_SLEEP))
         # Local health check ping
         if [ "${HEALTH_LOCAL_CHECK}" = "on" ] || [ "${HEALTH_LOCAL_CHECK}" = "true" ] || [ "${HEALTH_LOCAL_CHECK}" = "ON" ] || [ "${HEALTH_LOCAL_CHECK}" = "TRUE" ]; then
