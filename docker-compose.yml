@@ -8,9 +8,10 @@ services:
   connectorr:
     #build: . # use this to build from the Dockerfile and comment out image
     image: ghcr.io/wolffshots/connectorr:latest
+    container_name: alpine_connectorr
     ## specific port for the app/s you have connected
     #ports:
-    #  - 8080:8080
+    #  - 8080:8080 # would be accessed as 172.21.0.50:8080 or alpine_connectorr:8080 from within the docker network
     cap_add:
       - NET_ADMIN
     environment:
