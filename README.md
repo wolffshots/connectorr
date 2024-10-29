@@ -1,7 +1,9 @@
 # connectorr
 
 Simple sidecar to connect a container to an external network with another container as the gateway. 
-The goal is to be able to connect to a Gluetun container from multiple stacks without using `network_mode: container:<gluetun>`.
+The goal is to be able to connect to a Gluetun container from multiple stacks without using `network_mode: container:<gluetun>` since the `container` network mode introduces some problems like it not being a direct dependency which can cause stacks to fail to start and if the Gluetun container updates and restarts then the attached container won't regain network access until it is taken down and started again.
+
+I tried to keep the container itself as lightweight (I got it to like `4.1MB`!) and simple as possible with enough functionality and configurability that it solves lots of problems.
 
 ## Network
 
@@ -90,11 +92,12 @@ services:
     command: sh -c "apk add curl && curl ifconfig.me/ip"
   connectorr:
     image: ghcr.io/wolffshots/connectorr:latest
+    container_name: app_connectorr
     ## specific port for the app/s you have connected (in this case the ports you access alpine on)
     ## note that they must be unique ports on the actual app side
     ports:
-      - 8085:8085 # an example port for app one
-      - 8086:8086 # an example port for app two
+      - 8085:8085 # an example port for app one. to access app one in the docker network it would be 172.21.0.50:8085 or app_connectorr:8085
+      - 8086:8086 # an example port for app two. vice versa for app two
     cap_add:
       - NET_ADMIN
     environment:
