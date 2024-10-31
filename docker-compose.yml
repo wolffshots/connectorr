@@ -25,7 +25,7 @@ services:
       # - IP_API_URL=ifconfig.me/ip
       # - IP_API_CHECK=on
       # - TRACE_ON_START=off
-    restart: unless-stopped
+    restart: always
     ## these extra hosts just give names to IPs in things like traceroute but are optional
     extra_hosts:
       - "gateway:172.21.0.2"

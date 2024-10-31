@@ -104,7 +104,7 @@ services:
       - GATEWAY_IP=172.21.0.2 # gluetun
       - BYPASS_IP=172.21.0.1 # docker host
       - BYPASS_SUBNETS=192.168.88.0/24 # local network
-    restart: unless-stopped
+    restart: always
     networks:
       vpn_net: # the network you created
         ipv4_address: 172.21.0.50 # static ip for this container
