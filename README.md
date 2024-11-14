@@ -9,10 +9,10 @@ I tried to keep the container itself as lightweight (I got it to like `4.1MB`!) 
 
 You'll need an external network with a known subnet which you can create like this:
 ```sh
-docker network create --subnet 172.21.0.0/24 vpn_net
+docker network create -subnet=172.21.0.0/24 --ip-range=172.21.0.128/25 --gateway=172.21.0.1 vpn_net
 ```
 
-You'll use IPs in this subnet and this network name for the containers you want to hook up
+You'll use IPs in this subnet and this network name for the containers you want to hook up. If you don't specify an IP it will assing one from 172.21.0.128-172.21.0.255 but if you do specify then you can use 172.21.0.0-172.21.0.255 but it's better to keep manual and auto assigned IPs separate so if you want a manual IP it would be better to select from 172.21.0.3-172.21.0.127.
 
 ## Gateway container
 
@@ -106,8 +106,7 @@ services:
       - BYPASS_SUBNETS=192.168.88.0/24 # local network
     restart: always
     networks:
-      vpn_net: # the network you created
-        ipv4_address: 172.21.0.50 # static ip for this container
+      - vpn_net # the network you created which will assign an ip in 172.21.0.128-172.21.0.255 based on the ip pool of the network
 networks:
   vpn_net: # the network you created
     external: true
