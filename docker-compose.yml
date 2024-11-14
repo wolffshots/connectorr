@@ -8,10 +8,10 @@ services:
   connectorr:
     #build: . # use this to build from the Dockerfile and comment out image
     image: ghcr.io/wolffshots/connectorr:latest
-    container_name: alpine_connectorr
+    container_name: connectorr
     ## specific port for the app/s you have connected
     #ports:
-    #  - 8080:8080 # would be accessed as 172.21.0.50:8080 or alpine_connectorr:8080 from within the docker network
+    #  - 8080:8080 # would be accessed as <assigned IP in 172.21.0.128-172.21.0.255>:8080 or connectorr:8080 from within the docker network
     cap_add:
       - NET_ADMIN
     environment:
@@ -38,8 +38,7 @@ services:
         max-size: "5m"
         max-file: "3"
     networks:
-      vpn_net: # the network you want to use for the gateway + apps 
-        ipv4_address: 172.21.0.50 # static ip for this container
+      - vpn_net # the network you created which will assign an ip in 172.21.0.128-172.21.0.255 based on the ip pool of the network for the gateway + apps
 networks:
   vpn_net: # the network you want to use for the gateway + apps 
     external: true # make sure to create it statically outside of this stack with something like `docker network create --subnet 172.21.0.0/24 vpn_net`
