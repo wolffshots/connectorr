@@ -14,4 +14,4 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 HEALTHCHECK --interval=5m --timeout=10s --retries=3 --start-period=5s CMD ["/usr/local/bin/healthcheck.sh"]
 
 # Label for Github container registry
-LABEL org.opencontainers.image.source https://github.com/wolffshots/connectorr
+LABEL org.opencontainers.image.source=https://github.com/wolffshots/connectorr
