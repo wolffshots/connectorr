@@ -3,7 +3,7 @@
 Simple sidecar to connect a container to an external network with another container as the gateway. 
 The goal is to be able to connect to a Gluetun container from multiple stacks without using `network_mode: container:<gluetun>` since the `container` network mode introduces some problems like it not being a direct dependency which can cause stacks to fail to start and if the Gluetun container updates and restarts then the attached container won't regain network access until it is taken down and started again.
 
-I tried to keep the container itself as lightweight (I got it to like `4.1MB`!) and simple as possible with enough functionality and configurability that it solves lots of problems.
+I tried to keep the container itself as lightweight (I got it to like `4.1MB` with the BusyBox variant! But that one couldn't manage other Docker containers in the Compose stack. The default Alpine variant now comes in at `13.9MB`.) and simple as possible with enough functionality and configurability that it solves lots of problems.
 
 ## Network
 
@@ -75,8 +75,18 @@ Once you have the gateway container set up and configured correctly you have the
 | `IP_API_URL`          | Endpoint to wget from to print IP                                                                     | Optional with default [ifconfig.me/ip](https://ifconfig.me/ip) | [ifconfig.me/ip](https://ifconfig.me/ip) | [ifconfig.me/ip](https://ifconfig.me/ip) |
 | `IP_API_CHECK`        | Whether to check the public IP on boot using IP_API_URL                                               | Optional with default on                                       | on                                       | on                                       |
 | `TRACE_ON_START`      | Run traceroutes when starting using `HEALTH_REMOTE_IP` and `HEALTH_LOCAL_IP` to confirm routing table | Optional with default off                                      | off                                      | off                                      |
+| `DEBUG`               | Used for controlling whether certain intermediary data is printed to terminal.            | Optional with default off (`true` to turn on)                                | off | true |
+| `LONG_SLEEP`               | The amount of time (in seconds) to sleep for between primary loops (checking containers and healths)            | Optional with default of 360  | 360 | 360 |
 
+# Compose stack
 Create a new stack for the things you want to include in what this connector routes and then add it as you see in the [example docker-compose.yml](./docker-compose.yml).
+
+If you include a volume for the Docker socket then the `connectorr` container will try update the networking of attached containers and simply restart other containers in the same Compose stack as it. By default this is run every 360 seconds (6 minutes) unless changed via the `LONG_SLEEP` environment variable.
+If you omit this section below then it will skip that functionality:
+```
+volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # this optional and is for ensuring attached containers are healthy and started on reboots
+```
 
 Here is a simplified version:
 ```yml
@@ -93,6 +103,8 @@ services:
   connectorr:
     image: ghcr.io/wolffshots/connectorr:latest
     container_name: app_connectorr
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # this optional and is for ensuring attached containers are healthy and started on reboots
     ## specific port for the app/s you have connected (in this case the ports you access alpine on)
     ## note that they must be unique ports on the actual app side
     ports:

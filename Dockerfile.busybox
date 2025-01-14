@@ -1,6 +1,4 @@
-FROM alpine:latest
-
-RUN apk add --no-cache curl jq
+FROM busybox:latest
 
 # Copy entrypoint script
 COPY --chmod=700 entrypoint.sh /usr/local/bin/entrypoint.sh
