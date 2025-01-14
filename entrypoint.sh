@@ -157,7 +157,7 @@ LONG_SLEEP=${LONG_SLEEP:-360}
 
 # Infinite loop to keep container running
 while true; do
-    check_and_restart_containers
     sleep "$LONG_SLEEP" &
     wait $!
+    check_and_restart_containers
 done
