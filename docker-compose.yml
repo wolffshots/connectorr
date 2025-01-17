@@ -1,13 +1,31 @@
 services:
-  ## minimal example with an alpine image
+  ## minimal example with alpine images
   alpine-connected:
     image: alpine:latest
     network_mode: service:connectorr
     command: sh -c "sleep 3600 & wait $!" # just sleep for an hour
 
+  alpine-connected-retry:
+    image: alpine:latest
+    network_mode: service:connectorr
+    command: sh -c "sleep 60 & wait $!" # just sleep for 60 seconds to force connectorr to restart it (successfully)
+
+  alpine-connected-fail:
+    image: alpine:latest
+    network_mode: service:connectorr
+    command: sh -c "sleep 1 & wait $!" # just sleep for a second to force connectorr to restart it (unsuccessfully)
+
   alpine-disconnected:
     image: alpine:latest
     command: sh -c "sleep 3600 & wait $!" # just sleep for an hour
+
+  alpine-disconnected-retry:
+    image: alpine:latest
+    command: sh -c "sleep 60 & wait $!" # just sleep for 60 seconds to force connectorr to restart it (successfully)
+
+  alpine-disconnected-fail:
+    image: alpine:latest
+    command: sh -c "sleep 1 & wait $!" # just sleep for a second to force connectorr to restart it (unsuccessfully)
 
   connectorr:
     # build: . # use this to build from the Dockerfile and comment out image
@@ -29,7 +47,7 @@ services:
       # - IP_API_CHECK=on
       # - TRACE_ON_START=off
       # - DEBUG=true # shows the json output from curl commands
-      # - LONG_SLEEP=360
+      # - LONG_SLEEP=360 # how long to sleep between checks
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # this optional and is for ensuring attached containers are healthy and started on reboots

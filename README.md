@@ -125,3 +125,20 @@ networks:
 ```
 
 Once this stack is up your apps should be using `connectorr` as their network and it should be routing all traffic through `gluetun` except for traffic between the bypassed subnets
+
+You can demo the functionality of the Docker management by using the included `docker-compose.yml` (you will just need to make sure the network config is right for you) to run:
+```sh
+docker compose down --remove-orphans && docker compose create && docker compose up --build -d connectorr && docker compose logs -f connectorr
+```
+You will see the output for `connectorr` and see it check the `alpine-*` containers and start them all after `LONG_SLEEP` (by default 6 min). After the first restart subsequent ones will only restart the containers that have exited.
+
+While the stack is running (after 6 minutes if you used the command above or immediately if you use something like `docker compose up -d`) you can also demo the functionality of other containers routing through `connectorr` by running these commands:
+```sh
+docker compose exec alpine-disconnected sh -c "apk add curl --no-cache && curl ifconfig.me"
+```
+The above should show your actual IP
+
+```sh
+docker compose exec alpine-connected sh -c "apk add curl --no-cache && curl ifconfig.me"
+```
+The above should show your IP through `connectorr` (so the VPN IP if `connectorr` is routing through a VPN like `gluetun`)
