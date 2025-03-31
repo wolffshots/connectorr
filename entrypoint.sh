@@ -179,7 +179,7 @@ fi
 
 # Set IP_API_URL to ifconfig.me if it is not defined
 if [ -z "$IP_API_URL" ]; then
-    IP_API_URL="http://ifconfig.me"
+    IP_API_URL="http://ifconfig.me/ip"
 fi
 
 # Fetch IP through the default route if IP_API_CHECK is undefined, on, ON, true, or TRUE
