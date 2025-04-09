@@ -57,6 +57,8 @@ iptables -A FORWARD -d 172.21.0.0/24 -i tun0 -j ACCEPT
 iptables -t nat -A POSTROUTING -s 172.21.0.0/24 -o tun0 -j MASQUERADE
 ```
 
+If you want to also have the connectorr container dynamically set the MTU (which can avoid problems on some VPN connections) you'll need to follow the instructions to set up the Gluetun control server [here](https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/control-server.md) and populate `GATEWAY_API_KEY` with an API key or set the auth type to `none` (not ideal).
+
 Make sure the [gluetun](https://github.com/qdm12/gluetun) stack is up and running correctly before moving on. If you have trouble please check the [gluetun-wiki](https://github.com/qdm12/gluetun-wiki) repo for help
 
 ## Environment
@@ -78,6 +80,7 @@ Once you have the gateway container set up and configured correctly you have the
 | `DEBUG`               | Used for controlling whether certain intermediary data is printed to terminal.                        | Optional with default off (`true` to turn on)                  | off                                      | true                                     |
 | `LONG_SLEEP`          | The amount of time (in seconds) to sleep for between primary loops (checking containers and healths)  | Optional with default of 360                                   | 360                                      | 360                                      |
 | `GATEWAY_API_PORT`    | The port of the Gluetun API on the remote                                                             | Optional with default of 8000                                  | 8000                                     | 8000                                     |
+| `GATEWAY_API_KEY`     | The API key to use when querying Gluetun                                                              | Optional with no default                                       | Empty                                       | YLqSsLywZg-some-key-Te                |
 
 # Compose stack
 Create a new stack for the things you want to include in what this connector routes and then add it as you see in the [example docker-compose.yml](./docker-compose.yml).

@@ -165,7 +165,7 @@ check_and_restart_containers() {
 }
 
 echo "Checking gateway MTU via Gluetun API" | ts
-GATEWAY_MTU=$(curl -s $GATEWAY_IP:${GATEWAY_API_PORT:-8000}/v1/vpn/settings | jq -r ".wireguard.mtu")
+GATEWAY_MTU=$(curl -s -H "X-API-Key: $GATEWAY_API_KEY" $GATEWAY_IP:${GATEWAY_API_PORT:-8000}/v1/vpn/settings | jq -r ".wireguard.mtu")
 GATEWAY_IFACE=$(ip route | grep default | awk '{print $5}')
 # Set the MTU of default interface to match the gateway MTU
 if [ -n "$GATEWAY_IFACE" ]; then
@@ -175,9 +175,13 @@ else
     GATEWAY_IFACE=eth0
 fi
 if [ -n "$GATEWAY_MTU" ]; then
-    echo "MTU for $GATEWAY_IP is: $GATEWAY_MTU" | ts
-    echo "Setting MTU to $GATEWAY_MTU on $GATEWAY_IFACE" | ts
-    ip link set dev $GATEWAY_IFACE mtu $GATEWAY_MTU
+    echo "MTU for $GATEWAY_IP is: $GATEWAY_MTU " | ts  
+    if [ "$GATEWAY_MTU" = 0 ]; then
+        echo "Skipping setting MTU since it is 0, this implies that the VPN is not connected or is not Wireguard"
+    else
+        echo "Setting MTU to $GATEWAY_MTU on $GATEWAY_IFACE" | ts
+        ip link set dev $GATEWAY_IFACE mtu $GATEWAY_MTU
+    fi
 else
     echo "Failed to determine gateway MTU. Keeping default." | ts
 fi
