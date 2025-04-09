@@ -75,8 +75,9 @@ Once you have the gateway container set up and configured correctly you have the
 | `IP_API_URL`          | Endpoint to wget from to print IP                                                                     | Optional with default [ifconfig.me/ip](https://ifconfig.me/ip) | [ifconfig.me/ip](https://ifconfig.me/ip) | [ifconfig.me/ip](https://ifconfig.me/ip) |
 | `IP_API_CHECK`        | Whether to check the public IP on boot using IP_API_URL                                               | Optional with default on                                       | on                                       | on                                       |
 | `TRACE_ON_START`      | Run traceroutes when starting using `HEALTH_REMOTE_IP` and `HEALTH_LOCAL_IP` to confirm routing table | Optional with default off                                      | off                                      | off                                      |
-| `DEBUG`               | Used for controlling whether certain intermediary data is printed to terminal.            | Optional with default off (`true` to turn on)                                | off | true |
-| `LONG_SLEEP`               | The amount of time (in seconds) to sleep for between primary loops (checking containers and healths)            | Optional with default of 360  | 360 | 360 |
+| `DEBUG`               | Used for controlling whether certain intermediary data is printed to terminal.                        | Optional with default off (`true` to turn on)                  | off                                      | true                                     |
+| `LONG_SLEEP`          | The amount of time (in seconds) to sleep for between primary loops (checking containers and healths)  | Optional with default of 360                                   | 360                                      | 360                                      |
+| `GATEWAY_API_PORT`    | The port of the Gluetun API on the remote                                                             | Optional with default of 8000                                  | 8000                                     | 8000                                     |
 
 # Compose stack
 Create a new stack for the things you want to include in what this connector routes and then add it as you see in the [example docker-compose.yml](./docker-compose.yml).

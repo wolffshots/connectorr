@@ -164,6 +164,24 @@ check_and_restart_containers() {
     fi
 }
 
+echo "Checking gateway MTU via Gluetun API" | ts
+GATEWAY_MTU=$(curl -s $GATEWAY_IP:${GATEWAY_API_PORT:-8000}/v1/vpn/settings | jq -r ".wireguard.mtu")
+GATEWAY_IFACE=$(ip route | grep default | awk '{print $5}')
+# Set the MTU of default interface to match the gateway MTU
+if [ -n "$GATEWAY_IFACE" ]; then
+    echo "Gateway interface determined as $GATEWAY_IFACE" | ts
+else
+    echo "Gateway interface could not be determined, defaulting to eth0" | ts
+    GATEWAY_IFACE=eth0
+fi
+if [ -n "$GATEWAY_MTU" ]; then
+    echo "MTU for $GATEWAY_IP is: $GATEWAY_MTU" | ts
+    echo "Setting MTU to $GATEWAY_MTU on $GATEWAY_IFACE" | ts
+    ip link set dev $GATEWAY_IFACE mtu $GATEWAY_MTU
+else
+    echo "Failed to determine gateway MTU. Keeping default." | ts
+fi
+
 if [ "${TRACE_ON_START}" = "on" ] || [ "${TRACE_ON_START}" = "true" ] || [ "${TRACE_ON_START}" = "ON" ] || [ "${TRACE_ON_START}" = "TRUE" ]; then
     echo "Running traceroute..." | ts
     # Run traceroute if HEALTH_REMOTE_IP is defined
