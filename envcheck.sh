@@ -23,3 +23,9 @@ if { [ "${HEALTH_LOCAL_CHECK}" = "on" ] || [ "${HEALTH_LOCAL_CHECK}" = "true" ] 
     echo "Error: HEALTH_LOCAL_IP must be defined if HEALTH_LOCAL_CHECK is enabled."
     exit 1
 fi
+
+# Check that BYPASS_IP is defined if BYPASS_SITES is defined
+if [ -n "$BYPASS_SITES" ] && [ -z "$BYPASS_IP" ]; then
+    echo "Error: BYPASS_IP must be defined if BYPASS_SITES is defined."
+    exit 1
+fi

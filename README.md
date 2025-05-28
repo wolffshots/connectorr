@@ -68,8 +68,9 @@ Once you have the gateway container set up and configured correctly you have the
 | Variable              | Description                                                                                           | Status                                                         | Default                                  | Example                                  |
 | --------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------- |
 | `GATEWAY_IP`          | IP of the gateway container (on the Docker network) that traffic will be routed through               | Required                                                       | N/A                                      | 172.21.0.2                               |
-| `BYPASS_IP`           | IP of the Docker host in the Docker network, normally 172.x.0.1                                       | Optional unless `BYPASS_SUBNETS` is defined then required      | N/A                                      | 172.21.0.1                               |
+| `BYPASS_IP`           | IP of the Docker host in the Docker network, normally 172.x.0.1                                       | Optional unless `BYPASS_SUBNETS` or `BYPASS_SITES` is defined then required | N/A                                      | 172.21.0.1                               |
 | `BYPASS_SUBNETS`      | Comma separated list of subnets that should be routed through the bypass IP                           | Optional                                                       | Empty                                    | 192.168.88.0/24,100.64.0.0/10            |
+| `BYPASS_SITES`        | Comma separated list of websites to lookup IPv4 addresses for and add to bypass routes                | Optional                                                       | Empty                                    | google.com,github.com,example.org        |
 | `HEALTH_REMOTE_IP`    | External IP to ping for health check                                                                  | Optional unless `HEALTH_REMOTE_CHECK` is on                    | N/A                                      | 1.1.1.1                                  |
 | `HEALTH_REMOTE_CHECK` | Whether to ping the HEALTH_REMOTE_IP from inside the container to log health                          | Optional with default off                                      | off                                      | on                                       |
 | `HEALTH_LOCAL_IP`     | Local IP to ping for health check                                                                     | Optional unless `HEALTH_LOCAL_CHECK` is on then required       | N/A                                      | 192.168.88.1                             |
@@ -120,6 +121,7 @@ services:
       - GATEWAY_IP=172.21.0.2 # gluetun
       - BYPASS_IP=172.21.0.1 # docker host
       - BYPASS_SUBNETS=192.168.88.0/24 # local network
+      - BYPASS_SITES=google.com,github.com # websites to bypass VPN
     restart: always
     networks:
       - vpn_net # the network you created which will assign an ip in 172.21.0.128-172.21.0.255 based on the ip pool of the network

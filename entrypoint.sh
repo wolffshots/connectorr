@@ -15,10 +15,28 @@ ip route del default
 # Set IFS to comma to split
 IFS=','
 
-# Add local subnets via BYPASS_IP
+# Add specified subnets via BYPASS_IP
 for subnet in $BYPASS_SUBNETS; do
     echo "Adding route for subnet $subnet via $BYPASS_IP" | ts
     ip route add "$subnet" via "$BYPASS_IP"
+done
+
+# Add routes for sites specified in BYPASS_SITES
+for site in $BYPASS_SITES; do
+    echo "Adding IPs for $site" | ts
+    # Lookup IPs using nslookup and filter for A records
+    site_ips=$(nslookup "$site" 2>/dev/null | grep -A 10 "Name:" | grep "Address:" | awk '{print $2}' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+
+    if [ -z "$site_ips" ]; then
+        echo "Failed to lookup IPs for $site" | ts
+        exit 1
+    fi
+
+    # Add route for each IP
+    for ip in $site_ips; do
+        echo "Adding route for IP $ip (from $site) via $BYPASS_IP" | ts
+        ip route add "$ip/32" via "$BYPASS_IP" 2>/dev/null || echo "Failed to add route for $ip" | ts
+    done
 done
 
 # Add default route via GATEWAY_IP
@@ -175,7 +193,7 @@ else
     GATEWAY_IFACE=eth0
 fi
 if [ -n "$GATEWAY_MTU" ]; then
-    echo "MTU for $GATEWAY_IP is: $GATEWAY_MTU " | ts  
+    echo "MTU for $GATEWAY_IP is: $GATEWAY_MTU " | ts
     if [ "$GATEWAY_MTU" = 0 ]; then
         echo "Skipping setting MTU since it is 0, this implies that the VPN is not connected or is not Wireguard"
     else
@@ -209,6 +227,7 @@ if [ -z "$IP_API_CHECK" ] || [ "$IP_API_CHECK" = "on" ] || [ "$IP_API_CHECK" = "
     public_ip=$(wget -qO- "$IP_API_URL")
     if [ -z "$public_ip" ]; then
         echo "Failed to fetch IP" | ts
+        exit 1
     else
         echo "IP through the default route: $public_ip" | ts
     fi
