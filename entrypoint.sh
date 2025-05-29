@@ -46,6 +46,7 @@ ip route add default via "$GATEWAY_IP"
 # Log routes
 echo "Current routing table:" | ts
 ip route | ts
+sleep 2
 
 # Function to handle cleanup on termination signals
 cleanup() {
