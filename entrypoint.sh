@@ -29,7 +29,11 @@ for site in $BYPASS_SITES; do
 
     if [ -z "$site_ips" ]; then
         echo "Failed to lookup IPs for $site" | ts
-        exit 1
+        if [ "${SUPPRESS_ERRORS}" = "on" ] || [ "${SUPPRESS_ERRORS}" = "true" ] || [ "${SUPPRESS_ERRORS}" = "ON" ] || [ "${SUPPRESS_ERRORS}" = "TRUE" ]; then
+            echo "SUPPRESS_ERRORS is enabled, continuing despite lookup failure" | ts
+        else
+            exit 1
+        fi
     fi
 
     # Add route for each IP
@@ -202,7 +206,12 @@ if [ -n "$GATEWAY_MTU" ]; then
         ip link set dev $GATEWAY_IFACE mtu $GATEWAY_MTU
     fi
 else
-    echo "Failed to determine gateway MTU. Keeping default." | ts
+    echo "Failed to determine gateway MTU." | ts
+    if [ "${SUPPRESS_ERRORS}" = "on" ] || [ "${SUPPRESS_ERRORS}" = "true" ] || [ "${SUPPRESS_ERRORS}" = "ON" ] || [ "${SUPPRESS_ERRORS}" = "TRUE" ]; then
+        echo "SUPPRESS_ERRORS is enabled, continuing despite lookup failure" | ts
+    else
+        exit 1
+    fi
 fi
 
 if [ "${TRACE_ON_START}" = "on" ] || [ "${TRACE_ON_START}" = "true" ] || [ "${TRACE_ON_START}" = "ON" ] || [ "${TRACE_ON_START}" = "TRUE" ]; then
@@ -228,7 +237,11 @@ if [ -z "$IP_API_CHECK" ] || [ "$IP_API_CHECK" = "on" ] || [ "$IP_API_CHECK" = "
     public_ip=$(wget -qO- "$IP_API_URL")
     if [ -z "$public_ip" ]; then
         echo "Failed to fetch IP" | ts
-        exit 1
+        if [ "${SUPPRESS_ERRORS}" = "on" ] || [ "${SUPPRESS_ERRORS}" = "true" ] || [ "${SUPPRESS_ERRORS}" = "ON" ] || [ "${SUPPRESS_ERRORS}" = "TRUE" ]; then
+            echo "SUPPRESS_ERRORS is enabled, continuing despite failure to fetch IP" | ts
+        else
+            exit 1
+        fi
     else
         echo "IP through the default route: $public_ip" | ts
     fi

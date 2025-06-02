@@ -1,6 +1,6 @@
 # connectorr
 
-Simple sidecar to connect a container to an external network with another container as the gateway. 
+Simple sidecar to connect a container to an external network with another container as the gateway.
 The goal is to be able to connect to a Gluetun container from multiple stacks without using `network_mode: container:<gluetun>` since the `container` network mode introduces some problems like it not being a direct dependency which can cause stacks to fail to start and if the Gluetun container updates and restarts then the attached container won't regain network access until it is taken down and started again.
 
 I tried to keep the container itself as lightweight (I got it to like `4.1MB` with the BusyBox variant! But that one couldn't manage other Docker containers in the Compose stack. The default Alpine variant now comes in at `13.9MB`.) and simple as possible with enough functionality and configurability that it solves lots of problems.
@@ -82,6 +82,7 @@ Once you have the gateway container set up and configured correctly you have the
 | `LONG_SLEEP`          | The amount of time (in seconds) to sleep for between primary loops (checking containers and healths)  | Optional with default of 360                                   | 360                                      | 360                                      |
 | `GATEWAY_API_PORT`    | The port of the Gluetun API on the remote                                                             | Optional with default of 8000                                  | 8000                                     | 8000                                     |
 | `GATEWAY_API_KEY`     | The API key to use when querying Gluetun                                                              | Optional with no default                                       | Empty                                       | YLqSsLywZg-some-key-Te                |
+| `SUPPRESS_ERRORS`     | When enabled, prevents the entrypoint script from exiting when failing to fetch IP, get site IPs or fetch the upstream MTU    | Optional with default off                                      | off                                      | on                                       |
 
 # Compose stack
 Create a new stack for the things you want to include in what this connector routes and then add it as you see in the [example docker-compose.yml](./docker-compose.yml).
