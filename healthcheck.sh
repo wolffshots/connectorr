@@ -1,5 +1,7 @@
 #!/bin/sh
 
+UPTIME=$(cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)
+
 . ./envcheck.sh
 
 check_health() {
@@ -13,9 +15,13 @@ check_health() {
 if [ "${HEALTH_LOCAL_CHECK}" = "on" ] || [ "${HEALTH_LOCAL_CHECK}" = "true" ] || [ "${HEALTH_LOCAL_CHECK}" = "ON" ] || [ "${HEALTH_LOCAL_CHECK}" = "TRUE" ]; then
     check_health "$HEALTH_LOCAL_IP"
 fi
-if [ "${HEALTH_REMOTE_CHECK}" = "on" ] || [ "${HEALTH_REMOTE_CHECK}" = "true" ] || [ "${HEALTH_REMOTE_CHECK}" = "ON" ] || [ "${HEALTH_REMOTE_CHECK}" = "TRUE" ]; then    
+if [ "${HEALTH_REMOTE_CHECK}" = "on" ] || [ "${HEALTH_REMOTE_CHECK}" = "true" ] || [ "${HEALTH_REMOTE_CHECK}" = "ON" ] || [ "${HEALTH_REMOTE_CHECK}" = "TRUE" ]; then
     check_health "$HEALTH_REMOTE_IP"
+else
+    if [ "$UPTIME" -lt 15 ]; then
+        exit 1  # Return unhealthy during first 15 seconds
+    fi
 fi
 
-sleep 0.001 &
+sleep 5 &
 wait $!
