@@ -19,7 +19,9 @@ if [ "${HEALTH_REMOTE_CHECK}" = "on" ] || [ "${HEALTH_REMOTE_CHECK}" = "true" ] 
     check_health "$HEALTH_REMOTE_IP"
 else
     if [ "$UPTIME" -lt 15 ]; then
-        exit 1  # Return unhealthy during first 15 seconds
+        if [ "${HEALTH_REMOTE_CHECK}" = "on" ] || [ "${HEALTH_REMOTE_CHECK}" = "true" ] || [ "${HEALTH_REMOTE_CHECK}" = "ON" ] || [ "${HEALTH_REMOTE_CHECK}" = "TRUE" ]; then
+            exit 1  # Return unhealthy during first 15 seconds
+        fi
     fi
 fi
 

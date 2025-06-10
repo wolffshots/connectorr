@@ -188,7 +188,9 @@ check_and_restart_containers() {
 }
 
 echo "Checking gateway MTU via Gluetun API" | ts
-GATEWAY_MTU=$(curl -s -H "X-API-Key: $GATEWAY_API_KEY" $GATEWAY_IP:${GATEWAY_API_PORT:-8000}/v1/vpn/settings | jq -r ".wireguard.mtu")
+GATEWAY_SETTINGS=$(curl -s -H "X-API-Key: $GATEWAY_API_KEY" $GATEWAY_IP:${GATEWAY_API_PORT:-8000}/v1/vpn/settings)
+GATEWAY_TYPE=$(echo $GATEWAY_SETTINGS | jq -r ".type")
+GATEWAY_WIREGUARD_MTU=$(echo $GATEWAY_SETTINGS | jq -r ".wireguard.mtu")
 GATEWAY_IFACE=$(ip route | grep default | awk '{print $5}')
 # Set the MTU of default interface to match the gateway MTU
 if [ -n "$GATEWAY_IFACE" ]; then
@@ -197,16 +199,28 @@ else
     echo "Gateway interface could not be determined, defaulting to eth0" | ts
     GATEWAY_IFACE=eth0
 fi
-if [ -n "$GATEWAY_MTU" ]; then
-    echo "MTU for $GATEWAY_IP is: $GATEWAY_MTU " | ts
-    if [ "$GATEWAY_MTU" = 0 ]; then
-        echo "Skipping setting MTU since it is 0, this implies that the VPN is not connected or is not Wireguard"
+
+if [ "$GATEWAY_TYPE" = "wireguard" ]; then
+    if [ -n "$GATEWAY_WIREGUARD_MTU" ]; then
+        echo "MTU for $GATEWAY_IP is: $GATEWAY_WIREGUARD_MTU " | ts
+        if [ "$GATEWAY_WIREGUARD_MTU" = 0 ]; then
+            echo "Skipping setting MTU since it is 0, this implies that the VPN is not connected or is not Wireguard"
+        else
+            echo "Setting MTU to $GATEWAY_WIREGUARD_MTU on $GATEWAY_IFACE" | ts
+            ip link set dev $GATEWAY_IFACE mtu $GATEWAY_WIREGUARD_MTU
+        fi
     else
-        echo "Setting MTU to $GATEWAY_MTU on $GATEWAY_IFACE" | ts
-        ip link set dev $GATEWAY_IFACE mtu $GATEWAY_MTU
+        echo "Failed to determine gateway MTU." | ts
+        if [ "${SUPPRESS_ERRORS}" = "on" ] || [ "${SUPPRESS_ERRORS}" = "true" ] || [ "${SUPPRESS_ERRORS}" = "ON" ] || [ "${SUPPRESS_ERRORS}" = "TRUE" ]; then
+            echo "SUPPRESS_ERRORS is enabled, continuing despite lookup failure" | ts
+        else
+            exit 1
+        fi
     fi
+elif [ "$GATEWAY_TYPE" = "openvpn" ]; then
+    echo "Gateway type is $GATEWAY_TYPE, skipping MTU configuration (only applies to wireguard)" | ts
 else
-    echo "Failed to determine gateway MTU." | ts
+    echo "Gateway type is invalid: $GATEWAY_TYPE" | ts
     if [ "${SUPPRESS_ERRORS}" = "on" ] || [ "${SUPPRESS_ERRORS}" = "true" ] || [ "${SUPPRESS_ERRORS}" = "ON" ] || [ "${SUPPRESS_ERRORS}" = "TRUE" ]; then
         echo "SUPPRESS_ERRORS is enabled, continuing despite lookup failure" | ts
     else
@@ -246,6 +260,9 @@ if [ -z "$IP_API_CHECK" ] || [ "$IP_API_CHECK" = "on" ] || [ "$IP_API_CHECK" = "
         echo "IP through the default route: $public_ip" | ts
     fi
 fi
+
+# Initial check and restart of containers
+check_and_restart_containers
 
 # Long sleep if not doing health checks
 LONG_SLEEP=${LONG_SLEEP:-360}

@@ -11,7 +11,7 @@ WORKDIR /usr/local/bin/
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Healthcheck
-HEALTHCHECK --interval=5m --timeout=15s --retries=3 --start-period=75s --start-interval=15s CMD ["/usr/local/bin/healthcheck.sh"]
+HEALTHCHECK --interval=5m --timeout=15s --retries=3 --start-period=75s --start-interval=10s CMD ["/usr/local/bin/healthcheck.sh"]
 
 # Label for Github container registry
 LABEL org.opencontainers.image.source=https://github.com/wolffshots/connectorr
