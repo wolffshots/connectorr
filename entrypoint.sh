@@ -189,8 +189,37 @@ check_and_restart_containers() {
 
 echo "Checking gateway MTU via Gluetun API" | ts
 GATEWAY_SETTINGS=$(curl -s -H "X-API-Key: $GATEWAY_API_KEY" $GATEWAY_IP:${GATEWAY_API_PORT:-8000}/v1/vpn/settings)
-GATEWAY_TYPE=$(echo $GATEWAY_SETTINGS | jq -r ".type")
-GATEWAY_WIREGUARD_MTU=$(echo $GATEWAY_SETTINGS | jq -r ".wireguard.mtu")
+
+# Check if we got a valid response
+if [ -z "$GATEWAY_SETTINGS" ]; then
+    echo "Error: Empty response from Gluetun API" | ts
+    if [ "${SUPPRESS_ERRORS}" = "on" ] || [ "${SUPPRESS_ERRORS}" = "true" ] || [ "${SUPPRESS_ERRORS}" = "ON" ] || [ "${SUPPRESS_ERRORS}" = "TRUE" ]; then
+        echo "SUPPRESS_ERRORS is enabled, skipping gateway MTU configuration" | ts
+    else
+        exit 1
+    fi
+fi
+
+# Debug the raw response
+if [ "$DEBUG" = "true" ]; then
+    echo "Gateway settings raw response: $GATEWAY_SETTINGS" | ts
+    echo "Gateway settings length: ${#GATEWAY_SETTINGS}" | ts
+fi
+
+# Validate JSON before parsing
+if ! echo "$GATEWAY_SETTINGS" | jq empty 2>/dev/null; then
+    echo "Error: Invalid JSON response from Gluetun API: $GATEWAY_SETTINGS" | ts
+    if [ "${SUPPRESS_ERRORS}" = "on" ] || [ "${SUPPRESS_ERRORS}" = "true" ] || [ "${SUPPRESS_ERRORS}" = "ON" ] || [ "${SUPPRESS_ERRORS}" = "TRUE" ]; then
+        echo "SUPPRESS_ERRORS is enabled, skipping gateway MTU configuration" | ts
+    else
+        exit 1
+    fi
+fi
+
+GATEWAY_TYPE=$(echo "$GATEWAY_SETTINGS" | jq -r ".type")
+echo "Gateway type determined as $GATEWAY_TYPE" | ts
+GATEWAY_WIREGUARD_MTU=$(echo "$GATEWAY_SETTINGS" | jq -r ".wireguard.mtu")
+echo "Gateway WireGuard MTU determined as $GATEWAY_WIREGUARD_MTU" | ts
 GATEWAY_IFACE=$(ip route | grep default | awk '{print $5}')
 # Set the MTU of default interface to match the gateway MTU
 if [ -n "$GATEWAY_IFACE" ]; then
