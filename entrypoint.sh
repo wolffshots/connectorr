@@ -167,7 +167,7 @@ check_and_restart_containers() {
                 fi
                 state=$(echo "$service_json" | jq -r '.[0].State')
                 network_mode=$(echo "$service_json" | jq -r '.[0].HostConfig.NetworkMode')
-                if [ "$state" != "running" ]; then
+                if [ "$state" != "running" ] && [ "$state" != "created" ]; then
                     if echo "$network_mode" | grep -q '^container:'; then
                         recreate_service "$service" "$service_json" "$state" "$connectorr_id"
                     else
