@@ -166,6 +166,7 @@ check_and_restart_containers() {
                     echo "Service JSON: $service_json" | ts
                 fi
                 state=$(echo "$service_json" | jq -r '.[0].State')
+                status=$(echo "$service_json" | jq -r '.[0].Status')
                 network_mode=$(echo "$service_json" | jq -r '.[0].HostConfig.NetworkMode')
                 if [ "$state" != "running" ] && [ "$state" != "created" ]; then
                     if echo "$network_mode" | grep -q '^container:'; then
@@ -175,6 +176,15 @@ check_and_restart_containers() {
                     fi
                     retry_count=$((retry_count + 1))
                     sleep 3
+                elif echo "$status" | grep -q unhealthy; then
+                        echo "Status is unhealthy: $status" | ts
+                        if echo "$network_mode" | grep -q '^container:'; then
+                            recreate_service "$service" "$service_json" "$state" "$connectorr_id"
+                        else
+                            restart_service "$service" "$service_json" "$state"
+                        fi
+                        retry_count=$((retry_count + 1))
+                        sleep 3
                 else
                     echo "Service $service is running. (attempt $((retry_count + 0)))" | ts
                     break
