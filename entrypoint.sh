@@ -91,10 +91,28 @@ recreate_service() {
     config=$(echo "$full_service_json" | jq '.Config')
     host_config=$(echo "$full_service_json" | jq '.HostConfig')
     networking_config=$(echo "$full_service_json" | jq '.NetworkSettings.Networks')
+
+    # Extract healthcheck from Config if it exists
+    healthcheck=$(echo "$config" | jq -r '.Healthcheck // null')
+    if [ "$healthcheck" != "null" ]; then
+        echo "Extracted healthcheck for service $service" | ts
+        if [ "$DEBUG" = "true" ]; then
+            echo "Healthcheck config: $healthcheck" | ts
+        fi
+    else
+        echo "No healthcheck found for service $service" | ts
+    fi
+
     # Update HostConfig to use the new connectorr container ID for networking
     host_config=$(echo "$host_config" | jq --arg connectorr_id "$connectorr_id" '.NetworkMode = "container:" + $connectorr_id')
-    # Recreate and start the container without Hostname
-    create_payload=$(jq -n --argjson config "$config" --argjson host_config "$host_config" --argjson networking_config "$networking_config" '{Domainname: $config.Domainname, User: $config.User, AttachStdin: $config.AttachStdin, AttachStdout: $config.AttachStdout, AttachStderr: $config.AttachStderr, Tty: $config.Tty, OpenStdin: $config.OpenStdin, StdinOnce: $config.StdinOnce, Env: $config.Env, Cmd: $config.Cmd, Entrypoint: $config.Entrypoint, Image: $config.Image, Labels: $config.Labels, Volumes: $config.Volumes, WorkingDir: $config.WorkingDir, NetworkDisabled: $config.NetworkDisabled, MacAddress: $config.MacAddress, StopSignal: $config.StopSignal, StopTimeout: $config.StopTimeout, HostConfig: $host_config, NetworkingConfig: {EndpointsConfig: $networking_config}}')
+
+    # Recreate and start the container without Hostname, including healthcheck if present
+    if [ "$healthcheck" != "null" ]; then
+        create_payload=$(jq -n --argjson config "$config" --argjson host_config "$host_config" --argjson networking_config "$networking_config" --argjson healthcheck "$healthcheck" '{Domainname: $config.Domainname, User: $config.User, AttachStdin: $config.AttachStdin, AttachStdout: $config.AttachStdout, AttachStderr: $config.AttachStderr, Tty: $config.Tty, OpenStdin: $config.OpenStdin, StdinOnce: $config.StdinOnce, Env: $config.Env, Cmd: $config.Cmd, Entrypoint: $config.Entrypoint, Image: $config.Image, Labels: $config.Labels, Volumes: $config.Volumes, WorkingDir: $config.WorkingDir, NetworkDisabled: $config.NetworkDisabled, MacAddress: $config.MacAddress, StopSignal: $config.StopSignal, StopTimeout: $config.StopTimeout, Healthcheck: $healthcheck, HostConfig: $host_config, NetworkingConfig: {EndpointsConfig: $networking_config}}')
+    else
+        create_payload=$(jq -n --argjson config "$config" --argjson host_config "$host_config" --argjson networking_config "$networking_config" '{Domainname: $config.Domainname, User: $config.User, AttachStdin: $config.AttachStdin, AttachStdout: $config.AttachStdout, AttachStderr: $config.AttachStderr, Tty: $config.Tty, OpenStdin: $config.OpenStdin, StdinOnce: $config.StdinOnce, Env: $config.Env, Cmd: $config.Cmd, Entrypoint: $config.Entrypoint, Image: $config.Image, Labels: $config.Labels, Volumes: $config.Volumes, WorkingDir: $config.WorkingDir, NetworkDisabled: $config.NetworkDisabled, MacAddress: $config.MacAddress, StopSignal: $config.StopSignal, StopTimeout: $config.StopTimeout, HostConfig: $host_config, NetworkingConfig: {EndpointsConfig: $networking_config}}')
+    fi
+
     if [ "$DEBUG" = "true" ]; then
         echo "Create JSON: $(echo "$create_payload" | jq .)" | ts
     fi
