@@ -180,6 +180,10 @@ check_and_restart_containers() {
 
             while [ $retry_count -lt $max_retries ]; do
                 service_json=$(curl -sS --unix-socket /var/run/docker.sock "http://localhost/containers/json?all=true&filters=$filter")
+                # Get container creation time and calculate uptime
+                created_at=$(echo "$service_json" | jq -r '.[0].Created')
+                current_time=$(date +%s)
+                container_uptime=$((current_time - created_at))
                 if [ "$DEBUG" = "true" ]; then
                     echo "Service JSON: $service_json" | ts
                 fi
@@ -204,6 +208,13 @@ check_and_restart_containers() {
                         retry_count=$((retry_count + 1))
                         sleep 3
                 else
+                    if [ "$state" == "created" ]; then
+                        # Check that container has been created for > 300s and start container if so
+                        if [ "$container_uptime" -gt 300 ]; then
+                            restart_service "$service" "$service_json" "$state"
+                            break
+                        fi
+                    fi
                     echo "Service $service is running. (attempt $((retry_count + 0)))" | ts
                     break
                 fi
