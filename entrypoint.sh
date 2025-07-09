@@ -136,7 +136,8 @@ check_and_restart_containers() {
         echo "Docker socket /var/run/docker.sock does not exist so not managing other services" | ts
     else
         # Get the project name
-        project_json=$(curl -sS --unix-socket /var/run/docker.sock http://localhost/containers/"$(hostname)"/json)
+        container_hostname=$(hostname | sed 's/\.internal$//')
+        project_json=$(curl -sS --unix-socket /var/run/docker.sock http://localhost/containers/"$container_hostname"/json)
         if [ "$DEBUG" = "true" ]; then
             echo "Project JSON: $project_json" | ts
         fi
